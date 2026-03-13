@@ -350,7 +350,7 @@
         }).join('');
 
         // Envío a Google Sheet (solo si configuraste la URL)
-        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('REEMPLAZA_AQUI')) {
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbwhT_MVcsoc0VbCWQT_rXcUP49pMIz-HCSGE-3So08wbaRUi6C37tSlhgiv3WshSTtiTw/exec')) {
           sendStatus.textContent = '⚠ Configura APPS_SCRIPT_URL en el código para enviar resultados al Google Sheet.';
           return; // Termina aquí si no hay URL configurada
         }
@@ -457,4 +457,5 @@
     })();
   </script>
 </body>
+
 </html>
