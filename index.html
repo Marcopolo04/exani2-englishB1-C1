@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CenevalMaster · EXANI II · Inglés — Simulador (45 reactivos)</title>
+  <style>
+    :root{
+      --bg:#0b1021; --card:#12183a; --ink:#eef2ff; --muted:#9aa3b2; --accent:#5dd39e; --accent2:#a78bfa; --danger:#ff6b6b; --ok:#22c55e;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial,'Noto Sans',sans-serif;background:var(--bg);color:var(--ink)}
+    main{max-width:980px;margin:0 auto;padding:1.2rem}
+    .site-header,.site-footer{background:#0a0f26;border-bottom:1px solid #1f2a55}
+    .site-header{padding:1rem 1.2rem}
+    .site-footer{padding:1rem 1.2rem;color:var(--muted);text-align:center}
+    .brand{display:flex;align-items:center;gap:.8rem}
+    .logo{height:40px}
+    .card{background:var(--card);border:1px solid #1f2a55;border-radius:12px;padding:1rem;margin-block:1rem;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .grid-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
+    label span{display:block;margin-bottom:.25rem;color:var(--muted)}
+    input[type="text"],input[type="email"],input[type="number"]{width:100%;padding:.75rem;border-radius:8px;border:1px solid #2a356b;background:#0f1540;color:var(--ink)}
+    button{appearance:none;border:none;border-radius:10px;padding:.75rem 1rem;font-weight:600;cursor:pointer}
+    button.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#0b1021}
+    button.secondary{background:#1a2250;color:var(--ink)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .hidden{display:none}
+    .help{margin-top:.6rem;color:var(--muted)}
+    .exam-header{display:flex;align-items:center;gap:1rem;position:sticky;top:0;background:var(--bg);padding:.5rem 0;z-index:10}
+    .timer{font-weight:700}
+    .progress{flex:1;height:10px;background:#1f2a55;border-radius:9999px;overflow:hidden}
+    #progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    .meta{color:var(--muted)}
+    .q-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+    .q-head .topic{color:var(--muted);font-size:.9rem}
+    .q-text{font-size:1.2rem;margin-bottom:.6rem}
+    .options{display:grid;gap:.5rem}
+    .option{display:flex;align-items:flex-start;gap:.6rem;background:#0f1540;border:1px solid #2a356b;border-radius:10px;padding:.6rem}
+    .option input{margin-top:.3rem}
+    .nav{display:flex;justify-content:space-between;margin-top:1rem}
+    .status{margin-top:.8rem;color:var(--muted)}
+    .correct{border-color:rgba(34,197,94,.5)}
+    .incorrect{border-color:rgba(255,107,107,.5)}
+    .feedback{font-size:.95rem;color:var(--muted);margin-top:.25rem}
+    .badge{display:inline-block;padding:.15rem .45rem;border-radius:9999px;background:#1a2250;color:var(--ink);font-size:.75rem}
+    .badge.ok{background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.5)}
+    .badge.warn{background:rgba(255,107,107,.18);color:#fecaca;border:1px solid rgba(255,107,107,.5)}
+    .actions{display:flex;gap:.6rem;margin-top:1rem}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <!-- Opcional: sustituye src por la ruta de tu logo 'Servicios Educations Oxford' -->
+      <!-- assets/logo.png -->
+      <h1>CenevalMaster · EXANI II · Inglés</h1>
+    </div>
+  </header>
+
+  <main>
+    <!-- Pantalla de inicio -->
+    <section id="start-screen" class="card">
+      <h2>Simulador de Inglés (45 preguntas)</h2>
+      <p>Temas basados en tu temario: tiempos verbales, modales, voz pasiva, comparativos/superlativos, artículos, cuantificadores, preposiciones, <em>there + be</em>, etc.</p>
+      <form id="student-form" class="grid">
+        <label>
+          <span>Nombre completo</span>
+          <input type="text" id="student-name" placeholder="Nombre y apellidos" required />
+        </label>
+        <label>
+          <span>Correo electrónico</span>
+          <input type="email" id="student-email" placeholder="tucorreo@dominio.com" required />
+        </label>
+        <label>
+          <span>Duración (minutos)</span>
+          <input type="number" id="duration" min="10" max="180" value="60" />
+        </label>
+        <button id="start-btn" type="submit" class="primary">Comenzar</button>
+      </form>
+      <details class="help">
+        <summary>¿Cómo funciona?</summary>
+        <ul>
+          <li>45 reactivos, opción múltiple.</li>
+          <li>Cronómetro visible y envío automático al agotarse el tiempo.</li>
+          <li>Retroalimentación al final: puntaje, desglose por tema y explicación de cada reactivo.</li>
+          <li>Se solicitarán nombre y correo; los resultados se enviarán a tu Google Sheet (configurable).</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- Pantalla del examen -->
+    <section id="exam-screen" class="hidden">
+      <div class="exam-header">
+        <div class="timer" aria-live="polite">⏳ <span id="time-left">--:--</span></div>
+        <div id="progress" class="progress" aria-label="Progreso"><div id="progress-bar"></div></div>
+        <div class="meta">
+          <span id="student-id"></span>
+        </div>
+      </div>
+
+      <div id="question-card" class="card">
+        <div class="q-head">
+          <span id="q-number">1</span>
+          <span id="q-topic" class="topic"></span>
+        </div>
+        <div id="q-text" class="q-text">...</div>
+        <form id="options" class="options" aria-label="Opciones"></form>
+        <div class="nav">
+          <button id="prev-btn" class="secondary">Anterior</button>
+          <button id="next-btn" class="secondary">Siguiente</button>
+          <button id="submit-btn" class="primary">Enviar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pantalla de resultados -->
+    <section id="results-screen" class="hidden">
+      <div class="card">
+        <h2>Resultados</h2>
+        <p><strong id="score"></strong></p>
+        <div id="topic-breakdown" class="grid-cols"></div>
+        <details open>
+          <summary>Retroalimentación por reactivo</summary>
+          <div id="review"></div>
+        </details>
+        <div id="export-actions" class="actions">
+          <button id="restart-btn" class="secondary">Volver a empezar</button>
+        </div>
+        <p id="send-status" class="status"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <small>© <span id="year"></span> CenevalMaster · Doc. Marco Polo Mendoza Martínez</small>
+  </footer>
+
+  <!-- CONFIG: pega aquí tu URL de Web App de Apps Script -->
+  <script>
+    window.CM_CONFIG = {
+      APPS_SCRIPT_URL: 'REEMPLAZA_AQUI_CON_TU_WEB_APP_URL', // ← Pega aquí tu URL de Apps Script desplegado
+      SHEET_EXPECTED_HEADERS: ['timestamp','name','email','score','percent','time_used_sec','details_json','user_agent','commit_id']
+    };
+  </script>
+
+  <!-- REACTIVOS (45) -->
+  <script>
+    window.CM_QUESTIONS = [
+      {"id":1,"topic":"Present continuous","text":"Choose the correct sentence (action happening now).","options":["She reads a book right now.","She is reading a book right now.","She read a book right now.","She was reading a book right now."],"correctIndex":1,"explanation":"Para acciones en progreso usamos 'be + verb-ing': 'is reading'."},
+      {"id":2,"topic":"Present continuous","text":"Complete: What ___ Tom doing?","options":["are","do","is","does"],"correctIndex":2,"explanation":"En preguntas con 'what' y presente continuo: 'What is Tom doing?' (be + doing)."},
+      {"id":3,"topic":"Simple present","text":"Choose the sentence that expresses a habit/fact.","options":["I am go to school every day.","I go to school every day.","I was going to school every day.","I going to school every day."],"correctIndex":1,"explanation":"El presente simple describe hábitos: 'I go…' sin auxiliar ni -ing."},
+      {"id":4,"topic":"Simple present (3rd person)","text":"Complete: She ___ coffee in the morning.","options":["drink","drinks","drinkes","is drink"],"correctIndex":1,"explanation":"Con he/she/it añadimos -s al verbo: 'drinks'."},
+      {"id":5,"topic":"Wh-questions","text":"Choose the correct question: (place) ___ does he drive his new car?","options":["What","Where","How","When"],"correctIndex":1,"explanation":"Para lugar usamos 'Where'. Estructura: 'Where does he drive…?'"},
+      {"id":6,"topic":"Wh-questions","text":"We use ___ to ask about a person who performs the action.","options":["What","Who","Whom","Which"],"correctIndex":1,"explanation":"'Who' identifica a la persona que realiza la acción."},
+      {"id":7,"topic":"Possessive adjectives","text":"Choose the correct option: She has a car. It is ___ car.","options":["her","hers","she","his"],"correctIndex":0,"explanation":"Adjetivo posesivo antes de sustantivo: 'her car'."},
+      {"id":8,"topic":"Possessive pronouns","text":"—Whose book is this? —It is ___.","options":["her","hers","she's","his's"],"correctIndex":1,"explanation":"Pronombre posesivo independiente: 'hers'."},
+      {"id":9,"topic":"Prepositions (place)","text":"The cat is ___ the box.","options":["on","in","at","into"],"correctIndex":1,"explanation":"'In' indica inclusión: dentro de la caja."},
+      {"id":10,"topic":"Prepositions (time)","text":"He has a meeting ___ 10:00 p.m.","options":["in","on","at","by"],"correctIndex":2,"explanation":"Para hora específica usamos 'at'."},
+      {"id":11,"topic":"Prepositions (movement)","text":"The train went ___ the tunnel.","options":["across","through","to","over"],"correctIndex":1,"explanation":"'Through' indica movimiento al interior y salida por otro punto."},
+      {"id":12,"topic":"Verb to be (past)","text":"Choose the correct sentence (past): They ___ at home yesterday.","options":["was","were","are","be"],"correctIndex":1,"explanation":"Con 'they' en pasado: 'were'."},
+      {"id":13,"topic":"Past progressive","text":"Complete: She ___ (watch) a film when I called.","options":["was watch","was watching","were watching","watched"],"correctIndex":1,"explanation":"Pasado continuo: was/were + verb-ing → 'was watching'."},
+      {"id":14,"topic":"Time conjunctions (when/while/as)","text":"Choose the best option: I met Karla ___ I was leaving.","options":["when","while","as","since"],"correctIndex":2,"explanation":"'As' para acciones simultáneas en progreso (al momento de irme)."},
+      {"id":15,"topic":"Simple past (regular)","text":"Choose the correct past form: 'study' →","options":["studies","studied","studyed","studing"],"correctIndex":1,"explanation":"Terminación en consonante + y → cambia a 'ied': studied."},
+      {"id":16,"topic":"Simple past (irregular)","text":"Choose the correct past form: 'go' →","options":["goed","gone","went","go"],"correctIndex":2,"explanation":"Pasado de 'go' es 'went'."},
+      {"id":17,"topic":"Articles (the)","text":"Choose the correct option: ___ Pacific Ocean is vast.","options":["A","An","The","— (zero)"],"correctIndex":2,"explanation":"Usamos 'the' con océanos, mares y ríos."},
+      {"id":18,"topic":"Zero article","text":"Choose the correct sentence.","options":["I prefer to drink a coffee.","I prefer to drink coffee.","I prefer to drink the coffee (general statement).","I prefer drink a coffee."],"correctIndex":1,"explanation":"Ante nombres incontables en general usamos artículo cero: 'drink coffee'."},
+      {"id":19,"topic":"Quantifiers (some/any)","text":"Choose the correct option (negative): I don't want to buy ___ coffee.","options":["some","any","a few","a little"],"correctIndex":1,"explanation":"En negativas usamos 'any'."},
+      {"id":20,"topic":"Quantifiers (a few / a little)","text":"Choose the correct option for an uncountable noun: There is ___ water in the bottle.","options":["a few","few","a little","many"],"correctIndex":2,"explanation":"Con incontables usamos 'a little'."},
+      {"id":21,"topic":"Future (going to)","text":"Complete: We ___ (be) late; look at the traffic!","options":["are going to be","will be","is going to be","be going to"],"correctIndex":0,"explanation":"'Going to' para evidencia presente: 'We are going to be late'."},
+      {"id":22,"topic":"Future (will)","text":"Choose the correct sentence (decision at the moment).","options":["I am going to open the window.","I will open the window.","I open the window now.","I opening the window now."],"correctIndex":1,"explanation":"'Will' para decisiones espontáneas: 'I will open…'."},
+      {"id":23,"topic":"There + be (present)","text":"Choose the correct option: ___ many students in the classroom.","options":["There is","There are","There be","They are"],"correctIndex":1,"explanation":"Plural → 'There are many students…'."},
+      {"id":24,"topic":"There + be (past)","text":"Complete: ___ an empty room in the hotel.","options":["There were","There was","There are","There be"],"correctIndex":1,"explanation":"Singular pasado → 'There was…'."},
+      {"id":25,"topic":"Modals (ability)","text":"Choose the correct option: My son ___ swim.","options":["can","may","must","should"],"correctIndex":0,"explanation":"'Can' expresa capacidad."},
+      {"id":26,"topic":"Modals (permission)","text":"Choose the question to ask for permission.","options":["May I open the window?","Must I open the window?","Should I open the window?","Would I open the window?"],"correctIndex":0,"explanation":"'May/Can I…?' para pedir permiso."},
+      {"id":27,"topic":"Modals (obligation)","text":"Complete: You ___ arrive at 8 o'clock (rule).","options":["might","must","could","would"],"correctIndex":1,"explanation":"'Must' expresa obligación/necessidad fuerte."},
+      {"id":28,"topic":"Modals (suggestion)","text":"Choose the best advice.","options":["You had better study the lesson.","You must study the lesson.","You may study the lesson.","You are going to study the lesson."],"correctIndex":0,"explanation":"'Had better/should/ought to' expresan sugerencia o conveniencia."},
+      {"id":29,"topic":"Modals (possibility)","text":"Choose the sentence that expresses possibility.","options":["She may win the prize.","She must win the prize.","She can win the prize (ability).","She had better win the prize."],"correctIndex":0,"explanation":"'May/might' expresan posibilidad."},
+      {"id":30,"topic":"Preference (would rather)","text":"Choose the correct sentence.","options":["I would rather to stay home.","I'd rather stay home.","I rather would stay home.","I would stay home rather."],"correctIndex":1,"explanation":"Estructura: 'would rather + base form': 'I'd rather stay…'."},
+      {"id":31,"topic":"Wh-clauses + to-infinitive","text":"Complete: She can't decide ___ go.","options":["where to","where","to where","where is"],"correctIndex":0,"explanation":"'wh-word + to-infinitive': 'where to go'."},
+      {"id":32,"topic":"Very / too / enough","text":"Choose the correct option: The exercise is ___ difficult for me to solve.","options":["very","too","enough","so"],"correctIndex":1,"explanation":"'too + adj + for' indica exceso que impide la acción."},
+      {"id":33,"topic":"Present perfect (already/yet/just)","text":"Choose the best option: The children have ___ eaten.","options":["yet","already","just now?","since"],"correctIndex":1,"explanation":"'Already' en afirmativas indica antes de lo esperado."},
+      {"id":34,"topic":"Present perfect continuous","text":"Choose the correct sentence (actividad reciente y en progreso).","options":["She has been studying all morning.","She had been studying all morning.","She is been studying all morning.","She has study all morning."],"correctIndex":0,"explanation":"Presente perfecto continuo: 'has/have been + verb-ing'."},
+      {"id":35,"topic":"Past perfect","text":"Choose the best option: We ___ (finish) when the class began.","options":["finished","had finished","have finished","were finishing"],"correctIndex":1,"explanation":"Acción anterior al pasado: pasado perfecto 'had finished'."},
+      {"id":36,"topic":"Comparatives (short)","text":"Choose the correct comparative: 'fat' →","options":["more fat than","fatest than","fatter than","most fat than"],"correctIndex":2,"explanation":"Adjetivo corto: se duplica consonante → 'fatter than'."},
+      {"id":37,"topic":"Comparatives (long)","text":"Choose the correct comparative: 'intelligent' →","options":["intelligenter than","more intelligent than","most intelligent than","intelligent than"],"correctIndex":1,"explanation":"Adjetivo largo: 'more + adj + than'."},
+      {"id":38,"topic":"Superlatives","text":"Choose the correct superlative: This is ___ restaurant in town.","options":["the best","the better","best","better"],"correctIndex":0,"explanation":"Superlativo de 'good' es 'the best'."},
+      {"id":39,"topic":"Similarity (like/as)","text":"Choose the correct option: Ana looks ___ her mother.","options":["as","alike","like","same as"],"correctIndex":2,"explanation":"'look like + noun/pronoun' para semejanza física."},
+      {"id":40,"topic":"Passive voice (present)","text":"Choose the passive: People speak English worldwide.","options":["English is spoken worldwide.","English speaks worldwide.","English was spoken worldwide.","English being spoken worldwide."],"correctIndex":0,"explanation":"Presente pasivo: 'is/are + past participle'."},
+      {"id":41,"topic":"Passive voice (past)","text":"Choose the passive (past): Octavio Paz wrote a book.","options":["A book is written by Octavio Paz.","A book was written by Octavio Paz.","A book were written by Octavio Paz.","A book has written by Octavio Paz."],"correctIndex":1,"explanation":"Pasado simple pasivo: 'was/were + participle'."},
+      {"id":42,"topic":"Passive voice (future)","text":"Complete: The bell ___ (ring) by the president.","options":["will ring","will be rung","is going to ring","is rung"],"correctIndex":1,"explanation":"Futuro pasivo: 'will be + participle' → 'will be rung'."},
+      {"id":43,"topic":"Passive voice (modal)","text":"Choose the correct passive with modal: Students ___ (must/examine) tomorrow.","options":["must examine","must be examined","must be examine","must been examined"],"correctIndex":1,"explanation":"Estructura: modal + be + participle → 'must be examined'."},
+      {"id":44,"topic":"Present perfect (participle)","text":"Choose the correct participle: 'take' →","options":["took","taken","taked","taking"],"correctIndex":1,"explanation":"Participio de 'take' es 'taken'."},
+      {"id":45,"topic":"Article 'a' (frequency/measure)","text":"Choose the correct option: I go fishing once ___ month.","options":["—","the","a","an"],"correctIndex":2,"explanation":"'a' se usa para frecuencias y medidas: 'once a month'."}
+    ];
+  </script>
+
+  <!-- LÓGICA DEL EXAMEN -->
+  <script>
+    /* CenevalMaster · EXANI II Inglés — Lado cliente (vanilla JS) */
+    (() => {
+      const APPS_SCRIPT_URL = (window.CM_CONFIG && window.CM_CONFIG.APPS_SCRIPT_URL) || '';
+      const SHEET_HEADERS = (window.CM_CONFIG && window.CM_CONFIG.SHEET_EXPECTED_HEADERS) || [];
+
+      const $ = (sel) => document.querySelector(sel);
+      const startScreen = $('#start-screen');
+      const examScreen = $('#exam-screen');
+      const resultsScreen = $('#results-screen');
+      const form = $('#student-form');
+      const nameInput = $('#student-name');
+      const emailInput = $('#student-email');
+      const durationInput = $('#duration');
+      const startBtn = $('#start-btn');
+      const timeLeftEl = $('#time-left');
+      const progressBar = $('#progress-bar');
+      const studentId = $('#student-id');
+      const qNumber = $('#q-number');
+      const qTopic = $('#q-topic');
+      const qText = $('#q-text');
+      const optionsForm = $('#options');
+      const prevBtn = $('#prev-btn');
+      const nextBtn = $('#next-btn');
+      const submitBtn = $('#submit-btn');
+      const scoreEl = $('#score');
+      const topicBreakdown = $('#topic-breakdown');
+      const reviewEl = $('#review');
+      const restartBtn = $('#restart-btn');
+      const sendStatus = $('#send-status');
+      const yearEl = $('#year'); yearEl.textContent = new Date().getFullYear();
+
+      let QUESTIONS = window.CM_QUESTIONS || [];
+      let current = 0;
+      let answers = new Array(QUESTIONS.length).fill(null);
+      let startTime = null;
+      let timer = null;
+      let totalSeconds = 60 * 60; // default 60 min
+
+      function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+          const j = Math.floor(Math.random()*(i+1));
+          [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+        return arr;
+      }
+
+      function shuffleOptions(question){
+        const map = question.options.map((opt,idx)=>({opt,idx}));
+        shuffle(map);
+        const newOptions = map.map(o=>o.opt);
+        const newCorrectIndex = map.findIndex(o=>o.idx===question.correctIndex);
+        question.options = newOptions;
+        question.correctIndex = newCorrectIndex;
+      }
+
+      function startTimer(){
+        const end = Date.now() + totalSeconds*1000;
+        function tick(){
+          const now = Date.now();
+          const remaining = Math.max(0, Math.floor((end - now)/1000));
+          const m = String(Math.floor(remaining/60)).padStart(2,'0');
+          const s = String(remaining%60).padStart(2,'0');
+          timeLeftEl.textContent = `${m}:${s}`;
+          const pct = 100 * (1 - (remaining/totalSeconds));
+          progressBar.style.width = `${pct}%`;
+          if(remaining<=0){
+            clearInterval(timer);
+            finalize(true);
+          }
+        }
+        tick();
+        timer = setInterval(tick, 1000);
+      }
+
+      function render(){
+        const q = QUESTIONS[current];
+        qNumber.textContent = `Reactivo ${current+1} de ${QUESTIONS.length}`;
+        qTopic.textContent = q.topic;
+        qText.textContent = q.text;
+        optionsForm.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+          const div = document.createElement('label');
+          div.className = 'option';
+          div.innerHTML = `
+            <input type="radio" name="q${q.id}" value="${idx}" ${answers[current]===idx?'checked':''} />
+            <span>${opt}</span>
+          `;
+          optionsForm.appendChild(div);
+        });
+
+        prevBtn.disabled = current===0;
+        nextBtn.classList.toggle('hidden', current===QUESTIONS.length-1);
+        submitBtn.classList.toggle('hidden', current!==QUESTIONS.length-1);
+      }
+
+      function finalize(autoByTime=false){
+        clearInterval(timer);
+        const timeUsedSec = Math.max(0, Math.floor((Date.now() - startTime)/1000));
+        const results = QUESTIONS.map((q, i) => {
+          const chosen = answers[i];
+          const correct = chosen === q.correctIndex;
+          return {
+            id: q.id,
+            topic: q.topic,
+            text: q.text,
+            chosenIndex: chosen,
+            chosenText: (chosen!=null? q.options[chosen] : null),
+            correctIndex: q.correctIndex,
+            correctText: q.options[q.correctIndex],
+            correct,
+            explanation: q.explanation
+          };
+        });
+        const correctCount = results.filter(r=>r.correct).length;
+        const percent = Math.round((100 * correctCount) / QUESTIONS.length);
+
+        // Desglose por tema
+        const byTopic = {};
+        results.forEach(r=>{
+          byTopic[r.topic] = byTopic[r.topic] || {total:0, ok:0};
+          byTopic[r.topic].total += 1;
+          byTopic[r.topic].ok += r.correct?1:0;
+        });
+
+        // UI resultados
+        examScreen.classList.add('hidden');
+        resultsScreen.classList.remove('hidden');
+        scoreEl.innerHTML = `Tu puntaje: <span class="badge ${percent>=70?'ok':'warn'}">${correctCount}/${QUESTIONS.length} (${percent}%)</span>` + (autoByTime? ' <span class="badge warn">(tiempo agotado)</span>' : '');
+
+        topicBreakdown.innerHTML = Object.entries(byTopic).map(([topic,data])=>{
+          const p = Math.round(100*data.ok/data.total);
+          return `<div class="card"><strong>${topic}</strong><div><span class="badge ${p>=70?'ok':'warn'}">${data.ok}/${data.total} · ${p}%</span></div></div>`
+        }).join('');
+
+        reviewEl.innerHTML = results.map((r,idx)=>{
+          const state = r.correct? 'ok' : 'warn';
+          const chosen = r.chosenText==null? '<em>Sin respuesta</em>' : r.chosenText;
+          return `
+            <div class="card">
+              <div class="q-head"><span>Reactivo ${idx+1} · <span class="topic">${r.topic}</span></span>
+              <span class="badge ${state}">${r.correct? 'Correcto' : 'Incorrecto'}</span></div>
+              <div class="q-text">${r.text}</div>
+              <ul>
+                <li><strong>Tu respuesta:</strong> ${chosen}</li>
+                <li><strong>Respuesta correcta:</strong> ${r.correctText}</li>
+              </ul>
+              <div class="feedback">${r.explanation}</div>
+            </div>
+          `;
+        }).join('');
+
+        // Envío a Google Sheet (solo si configuraste la URL)
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('REEMPLAZA_AQUI')) {
+          sendStatus.textContent = '⚠ Configura APPS_SCRIPT_URL en el código para enviar resultados al Google Sheet.';
+          return; // Termina aquí si no hay URL configurada
+        }
+
+        const payload = {
+          timestamp: new Date().toISOString(),
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          score: correctCount,
+          percent,
+          time_used_sec: timeUsedSec,
+          details_json: JSON.stringify({ byTopic, results }),
+          user_agent: navigator.userAgent,
+          commit_id: ''
+        };
+
+        sendStatus.textContent = 'Enviando resultados al Google Sheet…';
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(async (res)=>{
+          if(!res.ok) throw new Error('Respuesta no OK');
+          await res.json().catch(()=>({}));
+          sendStatus.textContent = '✔ Resultados enviados.';
+        }).catch(()=>{
+          // fallback no-cors (no podremos leer respuesta)
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          }).finally(()=>{
+            sendStatus.textContent = '✔ Resultados enviados (modo no‑cors).';
+          });
+        });
+      }
+
+      function persist(){
+        const state = { current, answers, startTime, totalSeconds, name: nameInput.value, email: emailInput.value };
+        localStorage.setItem('cm_state', JSON.stringify(state));
+      }
+      function restore(){
+        try{
+          const s = JSON.parse(localStorage.getItem('cm_state')||'null');
+          if(!s) return;
+          current = s.current||0;
+          answers = s.answers||answers;
+          startTime = s.startTime||null;
+          if(s.totalSeconds) totalSeconds = s.totalSeconds;
+          if(s.name) nameInput.value = s.name;
+          if(s.email) emailInput.value = s.email;
+        }catch(e){}
+      }
+
+      // Eventos
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        if(name.length < 5){ alert('Por favor, escribe tu nombre completo.'); return; }
+        const emailOk = /.+@.+\..+/.test(email);
+        if(!emailOk){ alert('Por favor, escribe un correo válido.'); return; }
+
+        // Preparar
+        totalSeconds = Math.max(10, Math.min(180, Number(durationInput.value||60))) * 60;
+
+        // Mezclar preguntas y opciones
+        window.CM_QUESTIONS.forEach(shuffleOptions);
+        QUESTIONS = window.CM_QUESTIONS;
+
+        // UI
+        startScreen.classList.add('hidden');
+        examScreen.classList.remove('hidden');
+        studentId.textContent = `${name} · ${email}`;
+
+        current = 0; answers = new Array(QUESTIONS.length).fill(null);
+        startTime = Date.now();
+        startTimer();
+        render();
+        persist();
+      });
+
+      optionsForm.addEventListener('change', (e)=>{
+        const input = e.target.closest('input[type="radio"]');
+        if(!input) return;
+        answers[current] = Number(input.value);
+        persist();
+      });
+
+      prevBtn.addEventListener('click', ()=>{ if(current>0){ current--; render(); persist(); }});
+      nextBtn.addEventListener('click', ()=>{ if(current<QUESTIONS.length-1){ current++; render(); persist(); }});
+      submitBtn.addEventListener('click', ()=>{
+        if(answers.some(a=>a===null)){
+          if(!confirm('Aún hay reactivos sin responder. ¿Enviar de todos modos?')) return;
+        }
+        finalize(false);
+      });
+
+      restartBtn.addEventListener('click', ()=>{ localStorage.removeItem('cm_state'); location.reload(); });
+
+      // Restaurar si hubiera algo (no reanuda el examen, solo precarga nombre/correo)
+      restore();
+    })();
+  </script>
+</body>
+</html>
