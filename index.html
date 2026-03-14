@@ -140,7 +140,7 @@
   <!-- CONFIG: pega aquí tu URL de Web App de Apps Script -->
   <script>
     window.CM_CONFIG = {
-      APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyDHChT6_X-0r_e4PiugB0Lj1Y-2B00z6BLvCNJSMlxFMpwFrFLPZ6dxzwKSp34ityQAA/exec', // ← Pega aquí tu URL de Apps Script desplegado
+      APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyA3eogkxi8OJNV0kA6btdKOoLazfn6Q1dZTYJ_BHqhv3WrdiNiQ7YVJ7z2xH0E684D5A/exec', // ← Pega aquí tu URL de Apps Script desplegado
       SHEET_EXPECTED_HEADERS: ['timestamp','name','email','score','percent','time_used_sec','details_json','user_agent','commit_id']
     };
   </script>
@@ -350,7 +350,7 @@
         }).join('');
 
         // Envío a Google Sheet (solo si configuraste la URL)
-        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbyDHChT6_X-0r_e4PiugB0Lj1Y-2B00z6BLvCNJSMlxFMpwFrFLPZ6dxzwKSp34ityQAA/exec')) {
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('REEMPLAZA_AQUI')) {
           sendStatus.textContent = '⚠ Configura APPS_SCRIPT_URL en el código para enviar resultados al Google Sheet.';
           return; // Termina aquí si no hay URL configurada
         }
@@ -457,8 +457,4 @@
     })();
   </script>
 </body>
-
 </html>
-
-
-
